@@ -40,7 +40,7 @@
         bottom: 0;
         left: 0;
         right: 0;
-        display: flex;
+        display: block;
     }
     
     form {
@@ -50,6 +50,7 @@
         align-items: center;
         justify-content: center;
         display: flex;
+        position: relative;
         flex-direction: column;
         width: 100%;
         height: 100%;
@@ -86,10 +87,29 @@
         background-color: white;
     }
 
+    .alert {
+        position: relative;
+        padding: 0.5rem 1rem;
+        margin-bottom: 0.2rem;
+        margin-top: 0.5rem;
+        border: 1px solid transparent;
+        border-radius: 0.25rem;
+    }
+
+    .alert-danger {
+        color: #c20404;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
+
+
     @media screen and (min-width: 700px){
         input[type="submit"]:hover, input[type="button"]:hover {
             color: red;
             background-color: #ececec;
+        }
+        #container{
+            bottom: 0;
         }
     }
 
@@ -97,6 +117,9 @@
         input[type="submit"]:active, input[type="button"]:active {
             color: red;
             background-color: #ececec;
+        }
+        #container {
+            bottom: auto;
         }
     }
 </style>
