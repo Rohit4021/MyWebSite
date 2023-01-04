@@ -37,17 +37,23 @@ app.post('/register', async (req, res) => {
     const confirm_pass = req.body.confirm_pwd
 
     if (pass !== confirm_pass) {
-        console.log('Error!')
-        res.send('Passwords not matched...')
+        console.log('Error! password not matched')
+        res.render('signup', {
+            pass: true
+        })
     } else {
         const phoneExist = await Users.find({phone: phone})
         const emailExist = await Users.find({email: email})
 
         if (phoneExist.length !== 0) {
-            res.send('Phone number already exists....')
+            res.render('signup', {
+                phone: true
+            })
         } else {
             if (emailExist.length !== 0) {
-                res.send('Email already exists...')
+                res.render('signup', {
+                    email: true
+                })
             } else {
                 const createUser = async () => {
                     try {
@@ -121,20 +127,28 @@ app.post('/login' ,async (req, res) => {
         const email = ephone
         const emails = await Users.find({email: email})
         if (emails[0].success !== true) {
-            res.send('User not Authorized')
+            res.render('login', {
+                unauth: true
+            })
         } else {
             if (emails.length !== 0) {
                 console.log(emails.length)
                 await bcrypt.compare(pwd, emails[0].password, (err, data) => {
                     if (data) {
-                        res.send(`Welcome ${emails[0].name}`)
+                        res.render('user', {
+                            user: emails[0].name
+                        })
                     } else {
-                        res.send('Invalid Password.........')
+                        res.render('login', {
+                            invalid_credentials: true
+                        })
                     }
                 })
 
             } else {
-                res.send('Email does not exist......')
+                res.render('login', {
+                    invalid_credentials: true
+                })
             }
         }
 
@@ -142,19 +156,28 @@ app.post('/login' ,async (req, res) => {
         const phone = ephone
         const phones = await Users.find({phone: phone})
         if (phones[0].success !== true) {
-            res.send('User not Authorized')
+            res.render('login', {
+                unauth: true
+            })
         } else {
             if (phones.length !== 0) {
                 console.log(phones.length)
                 await bcrypt.compare(pwd, phones[0].password, (err, data) => {
                     if (data) {
-                        res.send(`Welcome ${phones[0].name}`)
+                        // res.send(`Welcome ${phones[0].name}`)
+                        res.render('user', {
+                            user: phones[0].name
+                        })
                     } else {
-                        res.send('Invalid Password.......')
+                        res.render('login', {
+                            invalid_credentials: true
+                        })
                     }
                 })
             } else {
-                res.send('Phone Number does not exist.......')
+                res.render('login', {
+                    invalid_credentials: true
+                })
             }
         }
 
