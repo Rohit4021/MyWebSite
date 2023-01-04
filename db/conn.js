@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-
+mongoose.set("strictQuery", false);
 
 mongoose.connect(`mongodb+srv://${process.env.user}:${process.env.pass}@registerers.mthztqv.mongodb.net/?retryWrites=true&w=majority`).then(() => {
     console.log('Connection Successful....')
