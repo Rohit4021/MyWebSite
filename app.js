@@ -190,22 +190,29 @@ app.post('/login' ,async (req, res) => {
 app.get('/users', async (req, res) => {
     const email = req.query.email
     console.log(email)
-    try {
-        const updateSuccess = await Users.updateOne({
-            email: email
-        }, {
-            success: true
-        })
+    const emailDB = await Users.find({email: email})
+    if (emailDB[0].success !== true) {
+        try {
+            const updateSuccess = await Users.updateOne({
+                email: email
+            }, {
+                success: true
+            })
 
-        console.log(updateSuccess)
-        res.render('auth')
-        setTimeout(() => {
-            res.redirect('/login')
-        }, 3000)
-    } catch (err) {
-        console.log(err)
-        res.render('unauth')
+            console.log(updateSuccess)
+            res.render('auth')
+        } catch (err) {
+            console.log(err)
+            res.render('unauth')
+        }
+    } else {
+        res.render('aauth')
     }
+
+})
+
+app.get('/*', (req, res) => {
+    res.render('error')
 })
 
 app.listen(port, () => {
