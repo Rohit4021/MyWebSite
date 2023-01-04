@@ -6,6 +6,7 @@ const port = process.env.PORT || 8000
 const bcrypt = require('bcrypt')
 const Users = require("./db/conn")
 const nodemailer = require('nodemailer')
+const validator = require('validator');
 
 
 app.use(express.urlencoded({
@@ -35,76 +36,84 @@ app.post('/register', async (req, res) => {
     const pass = req.body.pwd
     const confirm_pass = req.body.confirm_pwd
 
-    if (pass !== confirm_pass) {
-        console.log('Error! password not matched')
-        res.render('signup', {
-            pass: true
-        })
-    } else {
-        const phoneExist = await Users.find({phone: phone})
-        const emailExist = await Users.find({email: email})
-
-        if (phoneExist.length !== 0) {
+    if (validator.isEmail(email)) {
+        if (pass !== confirm_pass) {
+            console.log('Error! password not matched')
             res.render('signup', {
-                phone: true
+                pass: true
             })
         } else {
-            if (emailExist.length !== 0) {
+            const phoneExist = await Users.find({phone: phone})
+            const emailExist = await Users.find({email: email})
+
+            if (phoneExist.length !== 0) {
                 res.render('signup', {
-                    email: true
+                    phone: true
                 })
             } else {
-                const createUser = async () => {
-                    try {
-                        const salt = bcrypt.genSaltSync(10)
-                        const hash = bcrypt.hashSync(pass, salt)
-                        const user = new Users({
-                            name: firstName + ' ' + lastName,
-                            email: email,
-                            age: age,
-                            phone: phone,
-                            password: hash
-                        })
+                if (emailExist.length !== 0) {
+                    res.render('signup', {
+                        email: true
+                    })
+                } else {
+                    const createUser = async () => {
+                        try {
+                            const salt = bcrypt.genSaltSync(10)
+                            const hash = bcrypt.hashSync(pass, salt)
+                            const user = new Users({
+                                name: firstName + ' ' + lastName,
+                                email: email,
+                                age: age,
+                                phone: phone,
+                                password: hash
+                            })
 
-                        const result = await user.save()
-                        res.render('check')
-                    } catch (err) {
-                        console.log(err)
+                            const result = await user.save()
+                            res.render('check')
+                        } catch (err) {
+                            console.log(err)
+                        }
                     }
+
+                    createUser()
+
+
+                    const transporter = nodemailer.createTransport({
+                        service: 'gmail',
+                        auth: {
+                            user: 'rohitkm40021@gmail.com',
+                            pass: process.env.email_pass
+                        }
+                    })
+
+                    const mailOptions = {
+                        from: 'rohitkm40021@gmail.com',
+                        to: email,
+                        subject: 'Activation Mail',
+                        text: 'Thank you for registering to our website. To activate your account, please open this link :- ' +
+                            `https://mywebsite-iuji.onrender.com/users?email=${email}`
+                    }
+
+                    transporter.sendMail(mailOptions, function (error, info) {
+                        if (error) {
+                            console.log(error)
+                        } else {
+                            console.log('Email sent : ' + info)
+                        }
+                    })
                 }
-
-                createUser()
-
-
-                const transporter = nodemailer.createTransport({
-                    service: 'gmail',
-                    auth: {
-                        user: 'rohitkm40021@gmail.com',
-                        pass: process.env.email_pass
-                    }
-                })
-
-                const mailOptions = {
-                    from: 'rohitkm40021@gmail.com',
-                    to: email,
-                    subject: 'Activation Mail',
-                    text: 'Thank you for registering to our website. To activate your account, please open this link :- ' +
-                        `https://mywebsite-iuji.onrender.com/users?email=${email}`
-                }
-
-                transporter.sendMail(mailOptions, function (error, info) {
-                    if (error) {
-                        console.log(error)
-                    } else {
-                        console.log('Email sent : ' + info)
-                    }
-                })
             }
+
+
+
         }
-
-
-
+    } else {
+        res.render('signup', {
+            notEmail: true
+        })
     }
+
+
 })
 
 app.get('/find', async (req, res) => {
@@ -121,35 +130,41 @@ app.post('/login' ,async (req, res) => {
     const ephone = req.body.ephone
     const pwd = req.body.pwd
 
-
     if (isNaN(ephone)) {
         const email = ephone
-        const emails = await Users.find({email: email})
-        if (emails[0].success !== true) {
-            res.render('login', {
-                unauth: true
-            })
-        } else {
-            if (emails.length !== 0) {
-                console.log(emails.length)
-                await bcrypt.compare(pwd, emails[0].password, (err, data) => {
-                    if (data) {
-                        res.render('user', {
-                            user: emails[0].name
-                        })
-                    } else {
-                        res.render('login', {
-                            invalid_credentials: true
-                        })
-                    }
-                })
-
-            } else {
+        if (validator.isEmail(email)) {
+            const emails = await Users.find({email: email})
+            if (emails[0].success !== true) {
                 res.render('login', {
-                    invalid_credentials: true
+                    unauth: true
                 })
+            } else {
+                if (emails.length !== 0) {
+                    console.log(emails.length)
+                    await bcrypt.compare(pwd, emails[0].password, (err, data) => {
+                        if (data) {
+                            res.render('user', {
+                                user: emails[0].name
+                            })
+                        } else {
+                            res.render('login', {
+                                invalid_credentials: true
+                            })
+                        }
+                    })
+
+                } else {
+                    res.render('login', {
+                        invalid_credentials: true
+                    })
+                }
             }
+        } else {
+            res.render('login', {
+                invalid_credentials: true
+            })
         }
+
 
     } else {
         const phone = ephone
